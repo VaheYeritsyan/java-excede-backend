@@ -1,0 +1,9 @@
+api:
+  paypal:
+    url: "sb-ogq9625033190@business.example.com"
+    token: "access_token$sandbox$rwhzdn6jvqq7hktv$8ea3e15072663fd0c1858750b39b0fa0"
+    clientId: "ARPO7-v-GSqOFvqloH5NhDrBLaBI7GiveEzFE36v5KTK9zEw4F2RsiAr_BBVgPCjNvT6FDiyQXJmSRvq"
+    clientSecret: "EDz_9KSkxbzgc-AlKFr2N7_Rnghbfb7U7UXwU25KiI_bKvvSqqg93oI5UKuwcEmenA9ubHNP3bzwZsKi"
+    mode: "sandbox"
+server:
+  port: 8081
