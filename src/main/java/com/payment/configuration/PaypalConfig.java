@@ -12,7 +12,6 @@ import java.util.Map;
 
 @Configuration
 public class PaypalConfig {
-
     @Value("${api.paypal.clientId}")
     private String clientId;
     @Value("${api.paypal.clientSecret}")
@@ -38,5 +37,4 @@ public class PaypalConfig {
         context.setConfigurationMap(paypalSdkConfig());
         return context;
     }
-
 }

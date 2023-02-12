@@ -1,4 +1,4 @@
-package com.payment.dto;
+package com.payment.dto.consts;
 
 public enum Currency {
     USD, GPB, EUR

@@ -1,20 +1,17 @@
-//package com.payment.configuration;
-//
-//import com.paypal.core.PayPalEnvironment;
-//import com.paypal.core.PayPalHttpClient;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//
-//@Configuration
-//public class ApplicationConfigs {
-//    @Value("${api.paypal.clientId}")
-//    private String clientId;
-//    @Value("${api.paypal.clientSecret}")
-//    private String clientSecret;
-//
-//    @Bean
-//    PayPalHttpClient getPaypalClient() {
-//        return new PayPalHttpClient(new PayPalEnvironment.Sandbox(clientId, clientSecret));
-//    }
-//}
+package com.payment.configuration;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class ApplicationConfigs {
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
+}
