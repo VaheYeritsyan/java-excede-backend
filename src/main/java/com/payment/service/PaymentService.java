@@ -1,8 +1,13 @@
 package com.payment.service;
 
 import com.payment.dto.PaymentRequest;
+import com.payment.dto.PaymentResponse;
+import com.payment.dto.PaymentType;
 import com.payment.integration.PaymentSystemFactory;
 import com.payment.integration.strategies.PaymentSystem;
+import com.payment.integration.strategies.impl.PaypalPayer;
+import com.paypal.api.payments.Links;
+import com.paypal.api.payments.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +16,16 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
     private final PaymentSystemFactory paymentSystemFactory;
 
-    public Object pay(PaymentRequest paymentRequest) {
-        PaymentSystem paymentStrategy = paymentSystemFactory.findPaymentStrategy(paymentRequest.getPaymentType());
-        return paymentStrategy.createPayment(paymentRequest);
+    public PaymentResponse pay(PaymentRequest paymentRequest) {
+        PaymentSystem paymentSystem = paymentSystemFactory.findPaymentStrategy(paymentRequest.getPaymentType());
+        return paymentSystem.createPayment(paymentRequest);
     }
 
+    public Payment executePayment(String paymentId, String payerId, PaymentType paymentType) {
+        if (paymentType != PaymentType.PAYPAL) {
+            throw new UnsupportedOperationException("Only PayPal is supported");
+        }
+        PaypalPayer paymentSystem = (PaypalPayer) paymentSystemFactory.findPaymentStrategy(paymentType);
+        return paymentSystem.executePayment(paymentId, payerId);
+    }
 }
