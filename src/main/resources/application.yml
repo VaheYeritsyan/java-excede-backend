@@ -1,9 +1,8 @@
 api:
   paypal:
-    clientId: "ARPO7-v-GSqOFvqloH5NhDrBLaBI7GiveEzFE36v5KTK9zEw4F2RsiAr_BBVgPCjNvT6FDiyQXJmSRvq"
-    clientSecret: "EDz_9KSkxbzgc-AlKFr2N7_Rnghbfb7U7UXwU25KiI_bKvvSqqg93oI5UKuwcEmenA9ubHNP3bzwZsKi"
-    mode: "sandbox"
+    clientId: ${PAYPAL_CLIENT_ID}
+    clientSecret: ${PAYPAL_CLIENT_SECRET}
   stripe:
-    secretKey: "sk_test_51MaLigE6L6fXv5FLOH5684HxlzOkQMKlPDO0Ld5xYLXZPWnTm4AHyN3xEwEttdVb5Pj8TXuAOPrKDa0Hk8joddB500I0pjZFmM"
+    secretKey: ${STRIPE_SECRET_KEY}
 server:
   port: 8081

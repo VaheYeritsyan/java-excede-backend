@@ -1,6 +1,8 @@
 package com.payment.exception;
 
 import com.payment.exception.error.ErrorResponseItem;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.util.Map;
@@ -15,6 +17,8 @@ import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ResponseErrorsUtil {
     public static final Map<HttpStatus, ErrorResponseItem> ERROR_MESSAGES = Map.ofEntries(
             entry(BAD_REQUEST, ErrorResponseItem.STATUS_400),

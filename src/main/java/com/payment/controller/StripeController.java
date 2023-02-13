@@ -3,7 +3,7 @@ package com.payment.controller;
 import com.payment.dto.PaymentRequest;
 import com.payment.dto.PaymentResponse;
 import com.payment.dto.PaymentType;
-import com.payment.integration.strategies.impl.StripePayer;
+import com.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class StripeController {
-    private final StripePayer stripeClient;
+    private final PaymentService paymentService;
 
     @PostMapping("/pay")
     @ResponseStatus(code = HttpStatus.OK)
     public PaymentResponse chargeCard(@RequestBody PaymentRequest paymentRequest) {
         paymentRequest.setPaymentType(PaymentType.STRIPE);
-        return stripeClient.createPayment(paymentRequest);
+        return paymentService.createPayment(paymentRequest);
     }
 }

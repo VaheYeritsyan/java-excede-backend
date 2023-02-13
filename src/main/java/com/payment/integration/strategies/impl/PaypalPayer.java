@@ -41,7 +41,12 @@ public class PaypalPayer implements PaymentSystem {
         payment.setPayer(payer);
         payment.setRedirectUrls(getRedirectUris(paymentRequest, payment));
         Payment createdPayment = payment.create(apiContext);
-        String redirectUri = createdPayment.getLinks().stream().filter(a -> a.getRel().equals("approval_url")).findFirst().map(Links::getHref).orElseThrow(() -> new IllegalStateException("No approval url found in response"));
+        String redirectUri = createdPayment.getLinks()
+                .stream()
+                .filter(a -> a.getRel().equals("approval_url"))
+                .findFirst()
+                .map(Links::getHref)
+                .orElseThrow(() -> new IllegalStateException("No approval url found in response"));
 
         return PaymentResponse.builder().paymentDetails(createdPayment).redirectUrl(redirectUri).result(PaymentResult.SUCCESS).build();
     }
@@ -66,7 +71,7 @@ public class PaypalPayer implements PaymentSystem {
     }
 
     @SneakyThrows
-    public Payment executePayment(String paymentId, String payerId) {
+    public PaymentResponse executePayment(String paymentId, String payerId) {
         Payment payment = new Payment();
         payment.setId(paymentId);
         PaymentExecution paymentExecute = new PaymentExecution();
@@ -75,7 +80,7 @@ public class PaypalPayer implements PaymentSystem {
         if (!responsePayment.getState().equals("approved")) {
             throw new IllegalStateException(String.format("Payment with id %s was not approved", responsePayment.getId()));
         }
-        return payment;
+        return PaymentResponse.builder().result(PaymentResult.SUCCESS).paymentDetails(payment).build();
     }
 
     @Override

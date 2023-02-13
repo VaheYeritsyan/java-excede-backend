@@ -4,7 +4,6 @@ import com.payment.dto.PaymentRequest;
 import com.payment.dto.PaymentResponse;
 import com.payment.dto.PaymentType;
 import com.payment.service.PaymentService;
-import com.paypal.api.payments.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,12 +23,12 @@ public class PayPalController {
     @PostMapping("pay")
     @ResponseStatus(code = HttpStatus.OK)
     public PaymentResponse pay(@RequestBody PaymentRequest paymentRequest) {
-        return paymentService.pay(paymentRequest);
+        return paymentService.createPayment(paymentRequest);
     }
 
     @GetMapping("success")
     @ResponseStatus(code = HttpStatus.OK)
-    public Payment executePayment(@RequestParam("paymentId") String paymentId, @RequestParam("PayerID") String payerId) {
+    public PaymentResponse executePayment(@RequestParam("paymentId") String paymentId, @RequestParam("PayerID") String payerId) {
         return paymentService.executePayment(paymentId, payerId, PaymentType.PAYPAL);
     }
 }

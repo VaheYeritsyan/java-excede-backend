@@ -1,6 +1,5 @@
 package com.payment.integration.strategies.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.payment.dto.PaymentRequest;
 import com.payment.dto.PaymentResponse;
 import com.payment.dto.PaymentResult;
@@ -23,7 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class StripePayer implements PaymentSystem {
-    private final ObjectMapper objectMapper;
     @Value("${api.stripe.secretKey}")
     private String apiKey;
 
