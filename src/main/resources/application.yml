@@ -5,9 +5,8 @@ api:
   stripe:
     secretKey: ${STRIPE_SECRET_KEY}
   twilio:
-    accountSid: "AC034587118e27cdbda3189996015531f9"
-    authToken: "5c1378db47f788bcc3360fa3226b123f"
-    verifyTemplateId: "VA3aa82f42abc0c33c0ea9a2f45a2b16ba"
-    otpCode: "123456"
+    accountSid: ${TWILIO_ACCOUNT_SID}
+    authToken: ${TWILIO_AUTH_TOKEN}
+    templateSid: ${TWILIO_TEMPLATE_SID}
 server:
   port: 8081
