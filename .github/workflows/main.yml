@@ -2,11 +2,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches: pipeline
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,17 +21,17 @@ jobs:
       - name: Transfer jar file to Linode
         uses: appleboy/scp-action@master
         with:
-          host: 170.187.241.49
-          username: root
-          password: "development2026!"
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
           source: target/PaymentSystem-0.0.1-SNAPSHOT.jar
           target: /var/deployments/
       - name: SSH into Linode and deploy the application
         uses: appleboy/ssh-action@master
         with:
-          host: 170.187.241.49
-          username: root
-          password: "development2026!"
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             sudo service deploy-java stop
             sudo service deploy-java start
