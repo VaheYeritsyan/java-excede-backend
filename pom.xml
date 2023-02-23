@@ -56,6 +56,17 @@
 			<artifactId>stripe-java</artifactId>
 			<version>20.77.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.twilio.sdk</groupId>
+			<artifactId>twilio</artifactId>
+			<version>9.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sendgrid</groupId>
+			<artifactId>sendgrid-java</artifactId>
+			<version>4.0.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

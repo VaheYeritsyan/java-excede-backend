@@ -4,5 +4,9 @@ api:
     clientSecret: ${PAYPAL_CLIENT_SECRET}
   stripe:
     secretKey: ${STRIPE_SECRET_KEY}
+  twilio:
+    accountSid: ${TWILIO_ACCOUNT_SID}
+    authToken: ${TWILIO_AUTH_TOKEN}
+    templateSid: ${TWILIO_TEMPLATE_SID}
 server:
   port: 8081
