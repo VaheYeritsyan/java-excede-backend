@@ -6,3 +6,6 @@ api:
     secretKey: ${STRIPE_SECRET_KEY}
 server:
   port: 8081
+spring:
+  profiles:
+    active: dev
