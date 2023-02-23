@@ -20,7 +20,7 @@ jobs:
         run: mvn clean install
       - name: Print logs
         run: java --version
-      - name: Deploy to Linode
+      - name: Transfer jar file to Linode
         uses: appleboy/scp-action@master
         with:
           host: 170.187.241.49
@@ -28,16 +28,12 @@ jobs:
           password: "development2026!"
           source: target/PaymentSystem-0.0.1-SNAPSHOT.jar
           target: /var/deployments/
-#      - name: SSH into Linode and deploy the application
-#        uses: appleboy/ssh-action@master
-#        with:
-#          host: 170.187.241.49
-#          username: root
-#          password: "development2026!"
-#          script: |
-#            fuser -k 8081/tcp
-#            cd ~/var/deployments/target/
-#            nohup java -jar PaymentSystem-0.0.1-SNAPSHOT.jar &
-#            exit
-
-
+      - name: SSH into Linode and deploy the application
+        uses: appleboy/ssh-action@master
+        with:
+          host: 170.187.241.49
+          username: root
+          password: "development2026!"
+          script: |
+            sudo service deploy-java stop
+            sudo service deploy-java start
