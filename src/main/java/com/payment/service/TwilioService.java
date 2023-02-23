@@ -1,5 +1,7 @@
 package com.payment.service;
 
+import com.payment.dto.OperationStatus;
+import com.payment.dto.ServiceResponse;
 import com.payment.dto.TwilioVerificationType;
 import com.twilio.Twilio;
 import com.twilio.rest.verify.v2.service.Verification;
@@ -26,21 +28,27 @@ public class TwilioService {
         Twilio.init(accountSid, authToken);
     }
 
-    public String sendVerifyEmail() {
-        Verification verification = Verification.creator(templateSid, "eritsyan.01@gmail.com", "email").create();
+    public ServiceResponse sendVerifyEmail(String email) {
+        Verification verification = Verification.creator(templateSid, email, "email").create();
         log.info("Verification sid is {}", verification.getSid());
-        return verification.getSid();
+        return ServiceResponse.builder().operationStatus(OperationStatus.SUCCESSFUL).details(verification).build();
     }
 
-    public String sendVerifySms() {
-        Verification verification = Verification.creator(templateSid, "+37494710051", "sms").create();
+    public ServiceResponse sendVerifySms(String phoneNumber) {
+        Verification verification = Verification.creator(templateSid, phoneNumber, "sms").create();
         log.info("Verification sid is {}", verification.getSid());
-        return verification.getSid();
+        return ServiceResponse.builder().operationStatus(OperationStatus.SUCCESSFUL).details(verification).build();
     }
 
-    public void checkOtp(String code, TwilioVerificationType verificationType) {
-        String receiver = verificationType.equals(TwilioVerificationType.SMS) ? "+37494710051" : "eritsyan.01@gmail.com";
-        VerificationCheck verificationCheck = VerificationCheck.creator(templateSid).setTo(receiver).setCode(code).create();
-        log.info("Verification sid is {}", verificationCheck.getSid());
+    public ServiceResponse checkOtp(String code, String receiver) {
+        VerificationCheck verificationCheck;
+        try {
+            verificationCheck = VerificationCheck.creator(templateSid).setTo(receiver).setCode(code).create();
+        } catch (Exception e) {
+            return ServiceResponse.builder().operationStatus(OperationStatus.FAILED).errorMessage(e.getMessage()).build();
+        }
+        log.info("Verification sid is {}, and status {}", verificationCheck.getSid(), verificationCheck.getStatus());
+        OperationStatus operationStatus = verificationCheck.getStatus().equals("approved") ? OperationStatus.APPROVED : OperationStatus.PENDING;
+        return ServiceResponse.builder().operationStatus(operationStatus).details(verificationCheck).build();
     }
 }
