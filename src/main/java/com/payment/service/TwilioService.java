@@ -2,7 +2,6 @@ package com.payment.service;
 
 import com.payment.dto.OperationStatus;
 import com.payment.dto.ServiceResponse;
-import com.payment.dto.TwilioVerificationType;
 import com.twilio.Twilio;
 import com.twilio.rest.verify.v2.service.Verification;
 import com.twilio.rest.verify.v2.service.VerificationCheck;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -22,6 +22,9 @@ public class TwilioService {
     private String authToken;
     @Value("${api.twilio.templateSid}")
     private String templateSid;
+    @Value("${frontend.server.url}")
+    private String backendUrl;
+
 
     @PostConstruct
     public void init() {
@@ -29,9 +32,15 @@ public class TwilioService {
     }
 
     public ServiceResponse sendVerifyEmail(String email) {
-        Verification verification = Verification.creator(templateSid, email, "email").create();
+        Verification verification = Verification.creator(templateSid, email, "email")
+                .setChannelConfiguration(Map.of("substitutions", getCustomTemplateVariables(email)))
+                .create();
         log.info("Verification sid is {}", verification.getSid());
         return ServiceResponse.builder().operationStatus(OperationStatus.SUCCESSFUL).details(verification).build();
+    }
+
+    private Map<String, String> getCustomTemplateVariables(String email) {
+        return Map.of("backendUrl", backendUrl, "userEmail", email);
     }
 
     public ServiceResponse sendVerifySms(String phoneNumber) {

@@ -26,9 +26,9 @@ import java.util.List;
 public class PaypalPayer implements PaymentSystem {
     private final APIContext apiContext;
 
-    @Value("${frontend.url}success")
+    @Value("${frontend.server.url}success")
     private String successUrl;
-    @Value("${frontend.url}fail")
+    @Value("${frontend.server.url}fail")
     private String cancelUrl;
 
     @SneakyThrows

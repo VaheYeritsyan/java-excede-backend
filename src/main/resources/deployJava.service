@@ -1,0 +1,14 @@
+[Unit]
+Description=Deploy Payment App
+
+[Service]
+User=root
+WorkingDirectory=/var/deployments/target
+ExecStart=/usr/bin/java -jar PaymentSystem-0.0.1-SNAPSHOT.jar
+Restart=no
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=java-deploy
+
+[Install]
+WantedBy=multi-user.target
