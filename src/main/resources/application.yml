@@ -1,5 +1,6 @@
 api:
   paypal:
+    mode: "sandbox"
     clientId: ${PAYPAL_CLIENT_ID}
     clientSecret: ${PAYPAL_CLIENT_SECRET}
   stripe:
@@ -10,3 +11,6 @@ api:
     templateSid: ${TWILIO_TEMPLATE_SID}
 server:
   port: 8081
+frontend:
+  server:
+    url: "http://localhost:3000/"

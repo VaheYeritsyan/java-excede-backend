@@ -1,11 +1,14 @@
 package com.payment.controller;
 
+import com.payment.dto.ServiceResponse;
+import com.payment.dto.TwilioRequest;
 import com.payment.dto.TwilioVerificationType;
 import com.payment.service.TwilioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -19,20 +22,24 @@ public class TwilioController {
 
     @PostMapping("email")
     @ResponseStatus(code = HttpStatus.OK)
-    public String sendVerifyEmail() {
-        return twilioService.sendVerifyEmail();
+    public ServiceResponse sendVerifyEmail(@RequestBody TwilioRequest twilioRequest) {
+        return twilioService.sendVerifyEmail(twilioRequest.getEmail());
     }
-
 
     @PostMapping("sms")
     @ResponseStatus(code = HttpStatus.OK)
-    public String sendVerifySms() {
-        return twilioService.sendVerifySms();
+    public ServiceResponse sendVerifySms(@RequestBody TwilioRequest twilioRequest) {
+        return twilioService.sendVerifySms(twilioRequest.getPhoneNumber());
     }
 
     @GetMapping("verify")
     @ResponseStatus(code = HttpStatus.OK)
-    public void checkOtpCode(@RequestParam(name = "token") String code, @RequestParam(name = "verificationType") TwilioVerificationType verificationType) {
-        twilioService.checkOtp(code, verificationType);
+    public ServiceResponse checkOtpCode(@RequestParam(name = "token") String code,
+                                        @RequestParam(name = "verificationType") TwilioVerificationType verificationType,
+                                        @RequestParam(name = "email", required = false) String email,
+                                        @RequestParam(name = "phoneNumber", required = false) String phoneNumber
+    ) {
+        String receiver = verificationType.equals(TwilioVerificationType.EMAIL) ? email : phoneNumber;
+        return twilioService.checkOtp(code, receiver);
     }
 }
