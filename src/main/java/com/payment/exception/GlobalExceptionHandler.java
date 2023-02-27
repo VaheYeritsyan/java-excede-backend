@@ -1,8 +1,9 @@
 package com.payment.exception;
 
-import com.payment.exception.error.ApiError;
-import lombok.extern.log4j.Log4j2;
-import lombok.extern.slf4j.Slf4j;
+import static com.payment.exception.ResponseErrorsUtil.ERROR_MESSAGES;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -11,9 +12,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import static com.payment.exception.ResponseErrorsUtil.ERROR_MESSAGES;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import com.payment.exception.error.ApiError;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestControllerAdvice

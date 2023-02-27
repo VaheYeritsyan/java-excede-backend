@@ -4,5 +4,10 @@ api:
     clientSecret: ${PAYPAL_CLIENT_SECRET}
   stripe:
     secretKey: ${STRIPE_SECRET_KEY}
+  swell:
+    storeId: ${SWELL_STORE_ID}
+    secretKey: ${SWELL_SECRET_KEY}  
+    host: "api.swell.store"
+    port: 8443
 server:
   port: 8081
