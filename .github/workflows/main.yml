@@ -1,7 +1,7 @@
 name: CI/CD Pipeline
 on:
   push:
-    branches: pipeline
+    branches: master
 jobs:
   build:
     runs-on: ubuntu-latest
