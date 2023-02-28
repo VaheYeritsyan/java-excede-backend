@@ -53,8 +53,8 @@ public class SwellAccountService {
 		ApiDataObject api_response = connection.delete("/accounts/" + id, null, body);
 		
 		if (api_response.get("$data") == null) {
-			System.out.println("Failed to delete: " + id);
 			response.put("success", false);
+			response.put("message", "Failed to delete: " + id);
 		} else {
 			response.put("success", true);
 		}
@@ -237,7 +237,7 @@ public class SwellAccountService {
 	/**
 	 * Fetches all accounts from Swell and returns as an Array List.
 	 * 
-	 * @param limit
+	 * @param limit - The limit of accounts per page request to swell.
 	 * @return
 	 */
 	public List<ApiDataObject> getAllAccounts(int limit) throws InterruptedException {
@@ -258,23 +258,24 @@ public class SwellAccountService {
 		ApiDataObject count_query = connection.get("/accounts?limit=1");
 		
 		// If it returns a null (meaning the socket probably died) we retry.
-		if (count_query == null) {
-			return getAllAccounts(limit);
+		if (count_query == null || (boolean) count_query.get("success") == false) {
+			return null;
 		}
+		
+		
 
 	
 		// Returns how many accounts we can fetch.
 		double count = (long) ((ApiDataObject) count_query.get("$data")).get("count");
 
 		System.out.println("count: " + count);
-
 		
 		System.out.println("Preparing account data...");
 		
 		// Initializes an array that we will store the accounts in.
 		List<ApiDataObject> data = new ArrayList<ApiDataObject>();
 
-		// How many pages we cycle through to compile the data from.
+		// How many pages we cycle through to compile the data.
 		int pages = (int) Math.ceil(count / limit);
 
 		System.out.println("pages: " + pages);
