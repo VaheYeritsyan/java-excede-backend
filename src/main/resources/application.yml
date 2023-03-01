@@ -18,4 +18,4 @@ server:
   port: 8081
 frontend:
   server:
-    url: "http://localhost:3000/"
+    url: ${FRONT_END_URL}

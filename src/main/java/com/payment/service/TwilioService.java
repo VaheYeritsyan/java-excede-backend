@@ -5,7 +5,7 @@ import com.payment.dto.ServiceResponse;
 import com.payment.dto.TwilioRequest;
 import com.payment.dto.TwilioVerificationType;
 import com.payment.exception.classes.CustomerNotFoundException;
-import com.payment.integration.swell.service.SwellAccountService;
+import com.payment.service.swell.SwellAccountService;
 import com.payment.util.ApiDataObject;
 import com.twilio.Twilio;
 import com.twilio.rest.verify.v2.service.Verification;
@@ -45,6 +45,11 @@ public class TwilioService {
         if (twilioRequest.getVerificationType() == TwilioVerificationType.EMAIL) {
             return sendVerifyEmail(email);
         }
+        String phoneNumber = getUserPhoneNumber(email);
+        return sendVerifySms(phoneNumber);
+    }
+
+    private String getUserPhoneNumber(String email) {
         log.info("Getting customer {} from swell", email);
         ApiDataObject account = swellAccountService.getAccount(email);
         log.info("Got customer {} from swell", account.get(EMAIL_FIELD));
@@ -52,10 +57,9 @@ public class TwilioService {
         if (accountDetails == null) {
             throw new CustomerNotFoundException(email);
         }
-        String phoneNumber = Optional.ofNullable(accountDetails.get("phone"))
+        return Optional.ofNullable(accountDetails.get("phone"))
                 .map(String::valueOf)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("The customer %s doesn't have a phone number", accountDetails.get(EMAIL_FIELD))));
-        return sendVerifySms(phoneNumber);
     }
 
     public ServiceResponse sendVerifyEmail(String email) {
@@ -76,16 +80,12 @@ public class TwilioService {
         return ServiceResponse.builder().operationStatus(OperationStatus.SUCCESSFUL).details(verification).build();
     }
 
-    public ServiceResponse checkOtp(String code, String receiver) {
-        VerificationCheck verificationCheck;
-        try {
-            verificationCheck = VerificationCheck.creator(templateSid).setTo(receiver).setCode(code).create();
-        } catch (Exception e) {
-            log.error(String.format("Couldn't verify the otp for user %s", receiver), e);
-            return ServiceResponse.builder().operationStatus(OperationStatus.FAILED).errorMessage(e.getMessage()).build();
-        }
+    public ServiceResponse checkOtp(TwilioRequest twilioRequest) {
+        String email = twilioRequest.getEmail();
+        String receiver = twilioRequest.getVerificationType().equals(TwilioVerificationType.EMAIL) ? email : getUserPhoneNumber(email);
+        VerificationCheck verificationCheck = VerificationCheck.creator(templateSid).setTo(receiver).setCode(twilioRequest.getOtpCode()).create();
         log.info("Verification sid is {}, and status {}", verificationCheck.getSid(), verificationCheck.getStatus());
-        OperationStatus operationStatus = verificationCheck.getStatus().equals("approved") ? OperationStatus.APPROVED : OperationStatus.PENDING;
+        OperationStatus operationStatus = verificationCheck.getStatus().equals("approved") ? OperationStatus.APPROVED : OperationStatus.FAILED;
         return ServiceResponse.builder().operationStatus(operationStatus).details(verificationCheck).build();
     }
 }

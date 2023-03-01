@@ -1,4 +1,4 @@
-package com.payment.integration.swell.service;
+package com.payment.service.swell;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -23,32 +23,32 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * 
- * 
+ *
+ *
  * An API into Swell's back-end subscription functions.
- * 
+ *
  * @author Oska Jory <oska@excede.com.au>
- * 
+ *
  */
 @Service
 @RequiredArgsConstructor
 public class SwellSubscriptionService {
-	
-	
+
+
 	private final SwellConnection connection;
-	
+
 
 	/**
 	 * Fetches a specified subscription from swell.
-	 * 
+	 *
 	 * @param id - The ID of the subscription.
 	 * @return The targeted subscription from swell.
 	 */
 	public ApiDataObject getSubscription(String id) {
-		return connection.get("/subscriptions/" + id);		
+		return connection.get("/subscriptions/" + id);
 	}
-	
-	
+
+
 	/**
 	 * Delete an individual subscription from swell.
 	 * @param id - The id of the subscription we are deleting.
@@ -56,26 +56,26 @@ public class SwellSubscriptionService {
 	 */
 	public ApiDataObject deleteSubscription(String id) {
 		ApiDataObject response = new ApiDataObject();
-		
+
 		ApiDataObject body = new ApiDataObject();
-		
+
 		body.put("id", id);
 		ApiDataObject api_response = connection.delete("/subscriptions/" + id, null, body);
-		
+
 		if (api_response.get("$data") == null) {
 			System.out.println("Failed to delete: " + id);
 			response.put("success", false);
 		} else {
 			response.put("success", true);
 		}
-		
+
 		return response;
 	}
-	
-	
+
+
 	/**
 	 * Fetches all subscriptions from Swell and returns as an Array List.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<ApiDataObject> getAllSubscriptions() throws InterruptedException {
@@ -85,10 +85,10 @@ public class SwellSubscriptionService {
 
 	/**
 	 * Fetches all subscriptions from Swell and returns as an Array List.
-	 * 
+	 *
 	 * @param limit
 	 * @return
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	public List<ApiDataObject> getAllSubscriptions(int limit) throws InterruptedException {
 
@@ -125,10 +125,10 @@ public class SwellSubscriptionService {
 		int pages = (int) Math.ceil(count / limit);
 
 		System.out.println("pages: " + pages);
-		
-		
+
+
 		CountDownLatch latch = new CountDownLatch(pages);
-		
+
 		ExecutorService executor = Executors.newFixedThreadPool(pages);
 
 		// Loops through the pages and fetches the subscriptions from swell.
@@ -136,7 +136,7 @@ public class SwellSubscriptionService {
 
 			final int page = i;
 			final int page_limit = limit;
-			
+
 			executor.submit(() -> {
 
 				System.out.println("Getting data for page: " + page);
@@ -152,14 +152,14 @@ public class SwellSubscriptionService {
 				for (int ii = 0; ii < fetched_data.size(); ii++) {
 					data.add(JsonDataParser.createApiDataObject((JSONObject) fetched_data.get(ii)));
 				}
-				
+
 				latch.countDown();
 			});
 
 
 		}
-		
-		
+
+
 		latch.await();
 
 		System.out.println("Captured Data size: " + data.size());
@@ -169,17 +169,17 @@ public class SwellSubscriptionService {
 
 	}
 
-	
+
 	/**
-	 * 
+	 *
 	 * Creates a subscription for a Swell customer.
-	 * 
+	 *
 	 * @param account_id - The id of the Swell customer.
 	 * @param plan_id - The Subscription plan id.
 	 * @param payment_method_id - The payment method ID from Swell used to renew the subscription.
 	 * @param product_id - The product id assosciated with the subscription plan.
 	 * @param next_payment_date_utc - The next payment date in an ISO date time string in UTC time.
-	 * @param qty - The qty of this subscription product that it will renew. 
+	 * @param qty - The qty of this subscription product that it will renew.
 	 * @return A response object from Swell.
 	 */
 	public ApiDataObject addSubscription(String account_id, String plan_id, String payment_method_id, String product_id, String next_payment_date_utc, int qty) {
@@ -193,7 +193,7 @@ public class SwellSubscriptionService {
 		billing.put("default", true);
 		billing.put("use_account", true);
 		billing.put("billing_schedule", billing_schedule);
-		
+
 		// Body data.
 		body.put("plan_id", plan_id);
 		body.put("product_id", product_id);
@@ -205,10 +205,10 @@ public class SwellSubscriptionService {
 		return connection.post("/subscriptions", body);
 
 	}
-	
-	
+
+
 	/**
-	 * Add subscription with 
+	 * Add subscription with
 	 * @param account_id
 	 * @param product_id
 	 * @param freq
@@ -221,33 +221,33 @@ public class SwellSubscriptionService {
 		if (renewal_minute == null) {
 			renewal_minute = "00";
 		}
-		
+
 		if (renewal_hour == null) {
 			renewal_hour = "00";
 		}
-		
+
 		if (alignment_day <= 0) {
 			alignment_day = 1;
 		}
-		
+
 		if (timezone != null) {
-			
-			if (TimeZone.getTimeZone(ZoneId.of(timezone)) == null) { 
+
+			if (TimeZone.getTimeZone(ZoneId.of(timezone)) == null) {
 				timezone = "Australia/Sydney";
 			}
-			
+
 		} else {
-			
+
 			timezone = "Australia/Sydney";
-			
+
 		}
 
-		
+
 		if (Integer.parseInt(renewal_minute) > 59) {
 			throw new IllegalArgumentException("The renewal minute must be no more than 59 mintues.");
 		}
-		
-		
+
+
 		if (Integer.parseInt(renewal_hour) > 24) {
 			throw new IllegalArgumentException("The renewal hour must be in 24 hour time and no more than 24.");
 		}
@@ -263,26 +263,26 @@ public class SwellSubscriptionService {
 		}
 
 		LocalDate new_payment_date = DateUtility.getNearestDay(next_payment_date, alignment_day);
-		
+
 		String date_string = DateUtility.timezoneToUTCStringFromCustomInput(new_payment_date.toString(), renewal_hour, renewal_minute, timezone);
-			
+
 		return addSubscription(account_id, plan_id, payment_method_id, product_id, date_string, qty);
 	}
-	
-	
+
+
 	/**
 	 * @return A number of how many registered subscriptions there are.
 	 */
 	public long getSubscriptionCount() {
-		
+
 		// Gets the count of how many subscriptions we can pull.
-		ApiDataObject count_query = connection.get("/subscriptions?limit=1");	
-					
+		ApiDataObject count_query = connection.get("/subscriptions?limit=1");
+
 		// Returns how many subscriptions we can fetch.
 		long count = (long) ((ApiDataObject) count_query.get("$data")).get("count");
 
 		System.out.println("count: " + count);
-		
+
 		return count;
 	}
 

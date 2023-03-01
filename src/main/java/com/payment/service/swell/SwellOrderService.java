@@ -1,4 +1,4 @@
-package com.payment.integration.swell.service;
+package com.payment.service.swell;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,30 +19,30 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * 
+ *
  * An API into Swell's order backend functionality.
- * 
+ *
  * @author Oska Jory <oska@excede.com.au>
  *
  */
 @Service
 @RequiredArgsConstructor
 public class SwellOrderService {
-	
+
 	private final SwellConnection connection;
-	
-	
+
+
 	/**
 	 * Fetches a specified order from swell.
-	 * 
+	 *
 	 * @param id - The ID of the order.
 	 * @return The targeted order from swell.
 	 */
 	public ApiDataObject getOrder(String id) {
-		return connection.get("/orders/" + id);		
+		return connection.get("/orders/" + id);
 	}
-	
-	
+
+
 	/**
 	 * Delete an individual order from swell.
 	 * @param id - The id of the order we are deleting.
@@ -50,37 +50,37 @@ public class SwellOrderService {
 	 */
 	public ApiDataObject deleteOrder(String id) {
 		ApiDataObject response = new ApiDataObject();
-		
+
 		ApiDataObject body = new ApiDataObject();
-		
+
 		body.put("id", id);
 		ApiDataObject api_response = connection.delete("/orders/" + id, null, body);
-		
+
 		if (api_response.get("$data") == null) {
 			System.out.println("Failed to delete: " + id);
 			response.put("success", false);
 		} else {
 			response.put("success", true);
 		}
-		
+
 		return response;
 	}
-	
 
-	
+
+
 	/**
 	 * Fetches all orders from Swell and returns as an Array List.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<ApiDataObject> getAllOrders() throws InterruptedException {
 		return getAllOrders(SwellConfig.FETCH_LIMIT);
 	}
 
-	
+
 	/**
 	 * Fetches all orders from Swell and returns as an Array List.
-	 * 
+	 *
 	 * @param limit
 	 * @return
 	 */
@@ -121,39 +121,39 @@ public class SwellOrderService {
 		System.out.println("pages: " + pages);
 
 		CountDownLatch latch = new CountDownLatch(pages);
-		
+
 		ExecutorService executor = Executors.newFixedThreadPool(pages);
-		
+
 		for (int i = 1; i < pages + 1; i++) {
-			
+
 			final int page = i;
 			final int page_limit = limit;
-			
+
 			executor.submit(() -> {
 				System.out.println("Getting data for page: " + page);
-				
+
 				// Queries swell for the subscriptions from the page <i>.
 				ApiDataObject query = connection.get("/orders?limit=" + page_limit + "&page=" + page);
-		
+
 				// Grabs the data array from the query.
 				JSONArray fetched_data = (JSONArray) ((ApiDataObject) query.get("$data"))
 						.get("results");
-		
+
 				// Loops through the data array and adds the subscriptions to the fetched_data array.
 				for (int ii = 0; ii < fetched_data.size(); ii++) {
 					data.add(JsonDataParser.createApiDataObject((JSONObject) fetched_data.get(ii)));
 				}
-				
+
 				latch.countDown();
 			});
-				
+
 		}
 
-		
+
 		latch.await();
-		
+
 		System.out.println("Captured Data size: " + data.size());
-		
+
 		// Returns the data array.
 		return data;
 
@@ -163,20 +163,20 @@ public class SwellOrderService {
 	 * @return A number of how many registered orders there are.
 	 */
 	public long getOrderCount() {
-		
+
 		// Gets the count of how many orders we can pull.
 		ApiDataObject count_query = connection.get("/orders?limit=1");
-			
+
 		// If it returns a null (meaning the socket probably died) we retry.
 		if (count_query == null) {
 			return getOrderCount();
 		}
-					
+
 		// Returns how many orders we can fetch.
 		long count = (long) ((ApiDataObject) count_query.get("$data")).get("count");
 
 		System.out.println("count: " + count);
-		
+
 		return count;
 	}
 }

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class TwilioRequest {
     private String email;
-    private String phoneNumber;
     private String otpCode;
     private TwilioVerificationType verificationType;
 }

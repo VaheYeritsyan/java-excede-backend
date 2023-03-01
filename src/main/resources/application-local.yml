@@ -1,1 +1,16 @@
-
+api:
+  paypal:
+    mode: "sandbox"
+    clientId: "ARPO7-v-GSqOFvqloH5NhDrBLaBI7GiveEzFE36v5KTK9zEw4F2RsiAr_BBVgPCjNvT6FDiyQXJmSRvq"
+    clientSecret: "EDz_9KSkxbzgc-AlKFr2N7_Rnghbfb7U7UXwU25KiI_bKvvSqqg93oI5UKuwcEmenA9ubHNP3bzwZsKi"
+  stripe:
+    secretKey: "sk_test_51MaLigE6L6fXv5FLOH5684HxlzOkQMKlPDO0Ld5xYLXZPWnTm4AHyN3xEwEttdVb5Pj8TXuAOPrKDa0Hk8joddB500I0pjZFmM"
+  swell:
+    storeId: "csau"
+    secretKey: "1HX3sA8iqXiOnkKHeH77AMY3k1RucGAH"
+    host: "api.swell.store"
+    port: 8443
+  twilio:
+    accountSid: "AC034587118e27cdbda3189996015531f9"
+    authToken: "5c1378db47f788bcc3360fa3226b123f"
+    templateSid: "VA3aa82f42abc0c33c0ea9a2f45a2b16ba"
