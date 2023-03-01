@@ -14,3 +14,6 @@ api:
     accountSid: "AC034587118e27cdbda3189996015531f9"
     authToken: "5c1378db47f788bcc3360fa3226b123f"
     templateSid: "VA3aa82f42abc0c33c0ea9a2f45a2b16ba"
+frontend:
+  server:
+    url: "http://localhost:3000"

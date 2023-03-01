@@ -376,7 +376,7 @@ public class SwellAccountService {
 
 					if (result.get("$data") != null) {
 						System.out.println(result.toString());
-						response.put("password_token", token);
+						response.put("passwordToken", token);
 					} else {
 						response.put("success", false);
 						response.put("message", "Unauthorized to generate token.");

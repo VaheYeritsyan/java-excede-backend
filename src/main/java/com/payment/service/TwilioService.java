@@ -84,8 +84,14 @@ public class TwilioService {
         String email = twilioRequest.getEmail();
         String receiver = twilioRequest.getVerificationType().equals(TwilioVerificationType.EMAIL) ? email : getUserPhoneNumber(email);
         VerificationCheck verificationCheck = VerificationCheck.creator(templateSid).setTo(receiver).setCode(twilioRequest.getOtpCode()).create();
-        log.info("Verification sid is {}, and status {}", verificationCheck.getSid(), verificationCheck.getStatus());
-        OperationStatus operationStatus = verificationCheck.getStatus().equals("approved") ? OperationStatus.APPROVED : OperationStatus.FAILED;
-        return ServiceResponse.builder().operationStatus(operationStatus).details(verificationCheck).build();
+        String status = verificationCheck.getStatus();
+        log.info("Verification sid is {}, and status {}", verificationCheck.getSid(), status);
+        OperationStatus operationStatus = status.equals("approved") ? OperationStatus.APPROVED : OperationStatus.FAILED;
+        ApiDataObject generatedPassword=null;
+        if (operationStatus == OperationStatus.APPROVED) {
+            generatedPassword = swellAccountService.generatePasswordToken(email);
+        }
+        log.info("Generating a password for the user {}", twilioRequest.getEmail());
+        return ServiceResponse.builder().operationStatus(operationStatus).details(generatedPassword).build();
     }
 }
