@@ -2,6 +2,7 @@ package com.payment.integration;
 
 import com.payment.dto.PaymentType;
 import com.payment.integration.strategies.PaymentSystem;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class PaymentSystemFactory {
+	
     private Map<PaymentType, PaymentSystem> strategies;
 
     @Autowired
