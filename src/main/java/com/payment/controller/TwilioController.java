@@ -20,16 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class TwilioController {
     private final TwilioService twilioService;
 
-    @PostMapping("email")
+    @PostMapping("send-verification")
     @ResponseStatus(code = HttpStatus.OK)
     public ServiceResponse sendVerifyEmail(@RequestBody TwilioRequest twilioRequest) {
-        return twilioService.sendVerifyEmail(twilioRequest.getEmail());
-    }
-
-    @PostMapping("sms")
-    @ResponseStatus(code = HttpStatus.OK)
-    public ServiceResponse sendVerifySms(@RequestBody TwilioRequest twilioRequest) {
-        return twilioService.sendVerifySms(twilioRequest.getPhoneNumber());
+        return twilioService.sendVerification(twilioRequest);
     }
 
     @GetMapping("verify")

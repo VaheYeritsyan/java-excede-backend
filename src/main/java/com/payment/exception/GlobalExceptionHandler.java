@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-            IllegalArgumentException.class
+            RuntimeException.class
     })
     public ResponseEntity<Object> handleIllegalArgument(RuntimeException ex) {
         return buildResponseEntity(buildApiError(BAD_REQUEST, ex));
