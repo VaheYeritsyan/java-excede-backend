@@ -91,7 +91,7 @@ The body being sent with the request would follow this structure:
 Most data requested from Swell will be sent in a JSON object and contain the following data key:
 
 
-```json
+```console
 // A single result.
 $data: {
 	email:"example@test.com"
@@ -114,7 +114,7 @@ $data: null
 
 An error response will hold an $error key in the body of the response. Here is an example error response:
 
-```json
+```console
 {
 	"$error":"Resource not found /accountss/test",
 	"$status":404,
