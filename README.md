@@ -75,7 +75,7 @@ Here is an example of a POST request.
 ```
 The body being sent with the request would follow this structure: 
 
-```json
+```console
 {
 	$key: “test-store”, 
 	$client: “eopr2f930jf2903jfsdfjs09j”,
@@ -114,7 +114,7 @@ $data: null
 
 An error response will hold an $error key in the body of the response. Here is an example error response:
 
-```console
+```json
 {
 	"$error":"Resource not found /accountss/test",
 	"$status":404,
