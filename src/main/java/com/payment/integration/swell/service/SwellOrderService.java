@@ -18,6 +18,13 @@ import com.payment.util.JsonDataParser;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * 
+ * An API into Swell's order backend functionality.
+ * 
+ * @author Oska Jory <oska@excede.com.au>
+ *
+ */
 @Service
 @RequiredArgsConstructor
 public class SwellOrderService {
@@ -32,8 +39,7 @@ public class SwellOrderService {
 	 * @return The targeted order from swell.
 	 */
 	public ApiDataObject getOrder(String id) {
-		ApiDataObject order = connection.get("/orders/" + id);		
-		return order;
+		return connection.get("/orders/" + id);		
 	}
 	
 	
@@ -140,8 +146,6 @@ public class SwellOrderService {
 				
 				latch.countDown();
 			});
-			
-			
 				
 		}
 

@@ -24,13 +24,16 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * 
+ * 
+ * An API into Swell's back-end subscription functions.
+ * 
  * @author Oska Jory <oska@excede.com.au>
  * 
  */
 @Service
 @RequiredArgsConstructor
 public class SwellSubscriptionService {
-
+	
 	
 	private final SwellConnection connection;
 	
@@ -42,8 +45,7 @@ public class SwellSubscriptionService {
 	 * @return The targeted subscription from swell.
 	 */
 	public ApiDataObject getSubscription(String id) {
-		ApiDataObject subscription = connection.get("/subscriptions/" + id);		
-		return subscription;
+		return connection.get("/subscriptions/" + id);		
 	}
 	
 	
@@ -80,9 +82,7 @@ public class SwellSubscriptionService {
 		return getAllSubscriptions(SwellConfig.FETCH_LIMIT);
 	}
 
-	
-	
-	
+
 	/**
 	 * Fetches all subscriptions from Swell and returns as an Array List.
 	 * 
@@ -277,11 +277,6 @@ public class SwellSubscriptionService {
 		
 		// Gets the count of how many subscriptions we can pull.
 		ApiDataObject count_query = connection.get("/subscriptions?limit=1");	
-		
-		// If it returns a null (meaning the socket probably died) we retry.
-		if (count_query == null) {
-			return getSubscriptionCount();
-		}
 					
 		// Returns how many subscriptions we can fetch.
 		long count = (long) ((ApiDataObject) count_query.get("$data")).get("count");

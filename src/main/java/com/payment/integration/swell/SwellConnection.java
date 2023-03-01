@@ -7,13 +7,13 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -31,7 +31,7 @@ import com.payment.util.RequestType;
 
 /**
  * 
- * A SSL Socket client that connects & communicates with the back-end of Swell.
+ * An SSL Socket client that connects & communicates with the back-end of Swell.
  * 
  * @author Oska Jory <oska@excede.com.au>
  * 
@@ -42,32 +42,25 @@ import com.payment.util.RequestType;
 public class SwellConnection {
 	
 	
+	// The connection configurations for swell.
 	private SwellConfig config;
 	
 	
+	// The socket used to connect to swell.
 	private SSLSocket socket;
 	
 	
 	public static final String quote = "\"", comma = ",";;
 	
 	
+	// Establishes a connection to swell when constructed.
 	public SwellConnection(SwellConfig config) {
 		this.config = config;
-		
-		try {
-			
-			this.socket = establishConnection();
-			
-			if (socket.isConnected()) {
-				System.out.println("Successfully connected to swell.");
-			}
-			
-		} catch (KeyManagementException | NoSuchAlgorithmException | IOException e) {
-			
-			e.printStackTrace();
-			
-		}
-		
+		this.socket = establishConnection();			
+		if (socket.isConnected()) 
+			System.out.println("Successfully connected to swell.");
+				
+				
 	}
 	
 	
@@ -76,33 +69,42 @@ public class SwellConnection {
 	 * @return A socket connection to the host and port.
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyManagementException
-	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public SSLSocket establishConnection() throws KeyManagementException, UnknownHostException, IOException, NoSuchAlgorithmException {
+	public SSLSocket establishConnection() {
 		
-		SSLContext sslContext = SSLContext.getInstance("TLS");
+		try {
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			
+			sslContext.init(null, null, new SecureRandom());
+	
+			// Create a socket factory that trusts all certificates
+			SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+	
+			// Create a socket and connect to the server
+			SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(InetAddress.getByName(config.getHost()), config.getPort());
+	
+			SSLParameters sslParams = new SSLParameters();
+			
+			sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+			socket.setSSLParameters(sslParams);
+	
+			// Socket options.
+			socket.setTcpNoDelay(true);
+			socket.setKeepAlive(true);
+	
+			if (!socket.isConnected())			
+				System.out.println("Socket failed to connect.");
+	
+			return socket;
 		
-		sslContext.init(null, null, new SecureRandom());
-
-		// Create a socket factory that trusts all certificates
-		SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-		// Create a socket and connect to the server
-		SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(InetAddress.getByName(config.getHost()), config.getPort());
-
-		SSLParameters sslParams = new SSLParameters();
+		} catch (KeyManagementException | NoSuchAlgorithmException | IOException e) {
+			System.out.println("Failed to connect to swell.");
+			e.printStackTrace();
+		}
 		
-		sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-		socket.setSSLParameters(sslParams);
-
-		socket.setTcpNoDelay(true);
-		socket.setKeepAlive(true);
-
-		if (!socket.isConnected())			
-			System.out.println("Socket failed to connect.");
-
-		return socket;
+		
+		return null;
 	}
 	
 	
@@ -112,7 +114,7 @@ public class SwellConnection {
 	 * 
 	 * @param method - The method that the request is making to, (GET, POST, PUT, DELETE) ?
 	 * @param path - The path to the 
-	 * @param body - The body of data as a String in JSON format constructed by {@link com.excede.middleman.api.ssl.SwellSocketClient.constructBody} method.
+	 * @param body - The body of data as a String in JSON format
 	 * @return A constructed string holding the request being made to the server.
 	 */
 	private String constructRequest(String method, String path, String body) {
@@ -132,55 +134,11 @@ public class SwellConnection {
 	 *                  parameter variables.
 	 * @param body      - A HashMap storing the key and value pairs of any body data
 	 *                  that will be sent with the request.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject request(RequestType type, String path, HashMap<String, String> variables,
 			ApiDataObject body) {
-
-			ApiDataObject response;
-			
-			try {
-				
-				response = writeRequest(type.name().toLowerCase(), path, body);
-							
-				return response;
-				
-			} catch (KeyManagementException | NoSuchAlgorithmException e) {
-			
-				e.printStackTrace();
-			
-			} catch (UnsupportedEncodingException e) {
-				
-				System.out.println("Unsupported exception.");				
-				e.printStackTrace();
-				
-			} catch (IOException e) {
-								
-				System.out.println("Socket hangup - Attempting to retry to connect request");
-				e.printStackTrace();
-				
-				try {
-					
-					this.socket = this.establishConnection();
-				
-				} catch (KeyManagementException | NoSuchAlgorithmException | IOException e1) {
-			
-					e1.printStackTrace();
-					
-				}
-				
-				return request(type, path, variables, body);
-			
-			} catch (ParseException e) {
-				
-				System.out.println("parsing exception.");
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				
-			}
-
-			return null;
-			
+		return writeRequest(type.name().toLowerCase(), path, body);
 	}
 	
 	
@@ -201,8 +159,9 @@ public class SwellConnection {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws KeyManagementException 
 	 */
-	private ApiDataObject writeRequest(String type, String path, ApiDataObject data) throws UnsupportedEncodingException, IOException, ParseException, KeyManagementException, NoSuchAlgorithmException {		
+	private ApiDataObject writeRequest(String type, String path, ApiDataObject data) {		
 		
+		// The generic error message that will be sent if there is an error.
 		String error_message = "null";
 		
 		try {
@@ -214,80 +173,90 @@ public class SwellConnection {
 			// Initializes the data options if there are none.
 			data = data == null ? new ApiDataObject() : data;
 			
-			// Inserts the public key and secret 
-			// authentication keys into the options.
+			// Inserts the public key (the store id) and secret 
+			// authentication keys into the request options.
 			data.put("$client", config.getStoreId());
 			data.put("$key", config.getSecretKey());
 			
 			// Constructs the options into a readable JSON format.
-			String options = data.toString();//(data);
+			String options = data.toString();
 
-			// Constructs the request.
+			// Constructs the request into swell's readable protocol format [type, path, options].
 			String request = constructRequest(type, path, options);
 			
-			// Creates an output stream writer so we can write the request to the server.
+			// Creates an output stream writer to write to the socket stream.
 			OutputStreamWriter out = new OutputStreamWriter(socket.getOutputStream(), "UTF-8");
+			
+			// Outputs the request for debugging.
 			System.out.println(request);
+			
 			// Writes the request to the pipeline
 			out.write(request + "\n");
 			
 			// Submits the request.
 			out.flush();				
 			
-			// Creates a read stream so we can receive a response from the server in a buffered reader.
+			// Creates a stream reader so we can read a response from the server in a buffered reader.
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
 			// Reads the response from the server to a String. 
-			// The data received from the Swell server is a single line JSON object.
+			// The data received from the Swell server is a single line JSON object otherwise null.
 			String serverResponseData = reader.readLine();
 			
+			// Logs the server response for debugging.
 			System.out.println(serverResponseData);
 			
+			
+			// If the response received was null, it means there was a syntax error.
 			if (serverResponseData == null || serverResponseData.equalsIgnoreCase("null")) {
 				
 				ApiDataObject error_response = new ApiDataObject();
 				error_response.put("success", false);
-				error_response.put("message", "null received from server, possible error in request.");
+				error_response.put("message", "null received from server, syntax error in request.");
+				
+				socket.close();
+				
 				return error_response;
 				
+			} else {
+			
+				// Creates a JSON parser so we can parse the data received as JSON.
+				JSONParser parser = new JSONParser();
+				
+				// Constructs a JSON response to return.
+				JSONObject json_response = (JSONObject) parser.parse(serverResponseData);		
+				
+				ApiDataObject response = JsonDataParser.parse(json_response.toJSONString());			
+				
+				// Closes the socket once the connection is complete.
+				socket.close();
+			
+				// Returns the response from the server.
+				return response;
+			
 			}
 			
-			// Creates a JSON parser so we can parse the data received as JSON.
-			JSONParser parser = new JSONParser();
-			
-			// Constructs a JSON response to return.
-			JSONObject json_response = (JSONObject) parser.parse(serverResponseData);		
-			
-			ApiDataObject response = JsonDataParser.parse(json_response.toJSONString());			
-		
-			// Closes the socket once the connection is complete.
-			socket.close();
-			
-			return response;
-			
-			} catch (SocketException e) {
+		} catch (SocketException | SSLHandshakeException e) {
+								
+			if (e.getMessage().equalsIgnoreCase("connection reset") || e.getMessage().equalsIgnoreCase("Remote host terminated the handshake")) 
+				return writeRequest(type, path, data);
+			else 
+				error_message = e.getMessage() + " - Request syntax error.";
 				
-				e.printStackTrace();
-				
-				if (e.getMessage().equalsIgnoreCase("connection reset"))
-					return writeRequest(type, path, data);
-				
-				
-			} catch (KeyManagementException | NoSuchAlgorithmException | IOException e) {
+		} catch (IOException | ParseException  e) {
 			
-				e.printStackTrace();
-				
-				error_message = e.getMessage();
-			}
-					
+			error_message = e.getMessage();
+			e.printStackTrace();
 			
-
-			ApiDataObject error_response = new ApiDataObject();
-			error_response.put("success", false);
-			error_response.put("message", error_message);
-			
-			return error_response;		
 		}
+			
+		ApiDataObject error_response = new ApiDataObject();
+		
+		error_response.put("success", false);
+		error_response.put("message", error_message);
+			
+		return error_response;		
+	}
 	
 	
 	public SwellConfig getConfig() {
@@ -295,12 +264,11 @@ public class SwellConnection {
 	}
 	
 	
-	
 	/**
 	 * Creates a GET request to an end-point returning a JSON response.
 	 * 
 	 * @param path - The end-point URL path.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject get(String path) {
 		return request(RequestType.GET, path, null, null);
@@ -313,7 +281,7 @@ public class SwellConnection {
 	 * @param path      - The end-point URL path.
 	 * @param variables - A key value HashMap storing Query parameters.
 	 * @param body      - A key value HashMap storing body data.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject post(String path, HashMap<String, String> variables, ApiDataObject body) {
 		return request(RequestType.POST, path, variables, body);
@@ -326,7 +294,7 @@ public class SwellConnection {
 	 * @param path      - The end-point URL path.
 	 * @param variables - A key value HashMap storing Query parameters.
 	 * @param body      - A key value HashMap storing body data.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject post(String path, ApiDataObject body) {
 		return request(RequestType.POST, path, null, body);
@@ -339,7 +307,7 @@ public class SwellConnection {
 	 * @param path      - The end-point URL path.
 	 * @param variables - A key value HashMap storing Query parameters.
 	 * @param body      - A key value HashMap storing body data.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject put(String path, HashMap<String, String> variables, ApiDataObject body) {
 		return request(RequestType.PUT, path, variables, body);
@@ -351,7 +319,7 @@ public class SwellConnection {
 	 * 
 	 * @param path - The end-point URL path.
 	 * @param body - A key value HashMap storing body data.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject put(String path, ApiDataObject body) {
 		return request(RequestType.PUT, path, null, body);
@@ -363,7 +331,7 @@ public class SwellConnection {
 	 * 
 	 * @param path      - The end-point URL path.
 	 * @param variables - A key value HashMap storing Query parameters.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject delete(String path, HashMap<String, String> variables) {
 		return request(RequestType.DELETE, path, variables, null);
@@ -376,7 +344,7 @@ public class SwellConnection {
 	 * @param path      - The end-point URL path.
 	 * @param variables - A key value HashMap storing Query parameters.
 	 * @param body - A key value HashMap storing the body of the request.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject delete(String path, HashMap<String, String> variables, ApiDataObject body) {
 		return request(RequestType.DELETE, path, variables, body);
@@ -387,11 +355,10 @@ public class SwellConnection {
 	 * Creates a POST request to an end-point returning a JSON response.
 	 * 
 	 * @param path - The end-point URL path.
-	 * @return {@link JSONObject} - A JSON response from the end-point.
+	 * @return {@link ApiDataObject} - A JSON response from the end-point.
 	 */
 	public ApiDataObject delete(String path) {
 		return delete(path, null);
 	}
-
 	
 }

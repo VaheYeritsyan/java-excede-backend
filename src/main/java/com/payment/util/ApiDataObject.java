@@ -129,8 +129,9 @@ public class ApiDataObject extends Object implements Map<String, Object> {
 	 * Insets data / an object into the data structure of the data object.
 	 */
 	@Override
-	public Object put(String key, Object value) {
-		return data.put(key, value);
+	public ApiDataObject put(String key, Object value) {
+		data.put(key, value);
+		return this;
 	}
 
 

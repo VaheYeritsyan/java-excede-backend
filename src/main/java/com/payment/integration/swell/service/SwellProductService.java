@@ -7,6 +7,14 @@ import com.payment.util.ApiDataObject;
 
 import lombok.RequiredArgsConstructor;
 
+
+
+/**
+ * 
+ * An API into Swells back-end Product functions.
+ * @author Oska Jory <oska@excede.com.au>
+ *
+ */
 @Service
 @RequiredArgsConstructor
 public class SwellProductService {
@@ -15,29 +23,24 @@ public class SwellProductService {
 	
 	
 	public ApiDataObject getAllProducts() {
-		ApiDataObject response = connection.get("/products");		
-		return response;
+		return connection.get("/products");		
 	}	
 	
 	public ApiDataObject getAllProducts(int page) {
-		ApiDataObject response = connection.get("/products?page=" + page);
-		return response;
+		return connection.get("/products?page=" + page);
 	}
 	
 	public ApiDataObject getAllProductsWithLimit(int limit) {
-		ApiDataObject response = connection.get("/products?limit=" + limit);
-		return response;
+		return connection.get("/products?limit=" + limit);
 	}
 	
 	
 	public ApiDataObject getAllProductsWithLimit(int page, int limit) {
-		ApiDataObject response = connection.get("/products?page=" + page + (limit == 0 ? "" : "&limit=" + limit));
-		return response;
+		return connection.get("/products?page=" + page + (limit == 0 ? "" : "&limit=" + limit));
 	}
 	
 	public ApiDataObject getAllProducts(int page, int limit) {
-		ApiDataObject response = connection.get("/products?page=" + page + (limit == 0 ? "" : "&limit=" + limit));
-		return response;
+		return connection.get("/products?page=" + page + (limit == 0 ? "" : "&limit=" + limit));
 	}
 	
 }

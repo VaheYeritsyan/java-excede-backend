@@ -13,12 +13,22 @@ import org.springframework.stereotype.Service;
 
 import com.payment.configuration.SwellConfig;
 import com.payment.integration.swell.SwellConnection;
+import com.payment.integration.swell.dto.SwellCustomer;
 import com.payment.util.ApiDataObject;
 import com.payment.util.CryptUtil;
 import com.payment.util.JsonDataParser;
 
 import lombok.RequiredArgsConstructor;
 
+
+/**
+ * 
+ * 
+ * An API into Swells back-end account functionality.
+ * 
+ * @author Oska Jory <oska@excede.com.au>
+ *
+ */
 @Service
 @RequiredArgsConstructor
 public class SwellAccountService {
@@ -38,6 +48,7 @@ public class SwellAccountService {
 		return account;
 	}
 	
+	
 	/**
 	 * Delete an individual Customer from swell.
 	 * @param id - The id of the account we are deleting.
@@ -50,11 +61,12 @@ public class SwellAccountService {
 		
 		body.put("id", id);
 		body.put("$force_delete", true);
+		
 		ApiDataObject api_response = connection.delete("/accounts/" + id, null, body);
 		
 		if (api_response.get("$data") == null) {
 			response.put("success", false);
-			response.put("message", "Failed to delete: " + id);
+			response.put("message", "Failed to delete: " + id + " or account does not exist.");
 		} else {
 			response.put("success", true);
 		}
@@ -203,6 +215,12 @@ public class SwellAccountService {
 	}
 	
 	
+	
+	public ApiDataObject createAccount(SwellCustomer customer) {
+		return this.createAccount(customer.getFirst_name(), customer.getLast_name(), customer.getEmail(), customer.getPhone());
+	}
+	
+	
 	/**
 	 * @return A number of how many registered customer accounts there are.
 	 */
@@ -229,131 +247,150 @@ public class SwellAccountService {
 	 * Fetches all accounts from Swell and returns as an Array List.
 	 * @return
 	 */
-	public List<?> getAllAccounts() throws InterruptedException {
+	public List<ApiDataObject> getAllAccounts() throws InterruptedException {
 		return getAllAccounts(SwellConfig.FETCH_LIMIT);
 	}
 	
 	
 	/**
 	 * Fetches all accounts from Swell and returns as an Array List.
-	 * 
-	 * @param limit - The limit of accounts per page request to swell.
-	 * @return
+	 * @param limit - The limit of accounts per page fetched from
+	 * swell.  
 	 */
 	public List<ApiDataObject> getAllAccounts(int limit) throws InterruptedException {
+	        
+	    // Ensures the page limit is valid.
+	    if (limit > SwellConfig.FETCH_LIMIT) {
+	        limit = SwellConfig.FETCH_LIMIT;
+	    }
+	    
+	    if (limit <= 0) {
+	        limit = 25;
+	    }
+	    
+	    // Sends a query to swell.
+	    ApiDataObject count_query = connection.get("/accounts?limit= 1");
+	    
+	    // If the query was null, we fail the query.
+	    if (count_query == null || (boolean) count_query.get("success") == false) {
+	        return null;
+	    }
+	    
+	    // Returns how many accounts we can fetch.
+	    double count = (long) ((ApiDataObject) count_query.get("$data")).get("count");
+	    
+	    // Initializes an array that we will store the accounts in.
+	    List<ApiDataObject> data = new ArrayList<ApiDataObject>();
+	    
+	    // How many pages we cycle through to compile the
+	    // data.
+	    int pages = (int) Math.ceil(count / limit);
+	    
+	    // Creates a synchronized countdown that safely
+	    // count-down when a thread is closed.
+	    // This will trigger a promise for us to wait until
+	    // all threads are finished fetching the data before 
+	    // we proceed to the next step.
+	    CountDownLatch latch = new CountDownLatch(pages);
+	    
+	    // Creates a threadpool that will be used to simultaneously
+	    // fetch data from swell. (There should be a smaller limit
+	    // on the threadpool as it can be dangerous when fetching
+	    // excessive amounts of data.
+	    ExecutorService executor = Executors.newFixedThreadPool(pages);
+	        
+	    // Loops through the pages and fetches the accounts from
+	     // swell.
+	    for (int i = 1; i < pages + 1; i++) {
+	        final int page = i;
+	        final int page_limit = limit;
+	            
+	        executor.submit(() -> {
+	                            
+	            // Queries swell for the accounts from the page	
+	            // <i>.
+	            ApiDataObject query = connection.get("/accounts?limit=" + page_limit + "&page=" + page);
+	    
+	            // Grabs the data array from the query.
+	            JSONArray fetched_data = (JSONArray) ((ApiDataObject) query.get("$data")).get("results");
+	    
+	            // loops through the data array and adds the
+	            // accounts to the fetched_data array.
+	            for (int ii = 0; ii < fetched_data.size(); ii++) {
+	                data.add(JsonDataParser.createApiDataObject((JSONObject) fetched_data.get(ii)));
+	            }
+	    
+	            latch.countDown();	
+	        });
 
-		// Checks if the limit input is more than the fetch limit, if it is then it is
-		// automatically set
-		// to the maximum limit.
-		if (limit > SwellConfig.FETCH_LIMIT) {
-			limit = SwellConfig.FETCH_LIMIT;
-		}
+	    }
 
-		if (limit <= 0) {
-			limit = 25;
-		}
 
-		
-		// Gets the count of how many accounts we can pull.
-		ApiDataObject count_query = connection.get("/accounts?limit=1");
-		
-		// If it returns a null (meaning the socket probably died) we retry.
-		if (count_query == null || (boolean) count_query.get("success") == false) {
-			return null;
-		}
-		
-		
+	    // Waits till all the threads are finished. 
+	    latch.await();
 
-	
-		// Returns how many accounts we can fetch.
-		double count = (long) ((ApiDataObject) count_query.get("$data")).get("count");
-
-		System.out.println("count: " + count);
-		
-		System.out.println("Preparing account data...");
-		
-		// Initializes an array that we will store the accounts in.
-		List<ApiDataObject> data = new ArrayList<ApiDataObject>();
-
-		// How many pages we cycle through to compile the data.
-		int pages = (int) Math.ceil(count / limit);
-
-		System.out.println("pages: " + pages);
-		
-		CountDownLatch latch = new CountDownLatch(pages);
-		
-		ExecutorService executor = Executors.newFixedThreadPool(pages);
-		
-		// Loops through the pages and fetches the accounts from swell.
-		for (int i = 1; i < pages + 1; i++) {
-			
-			final int page = i;
-			final int page_limit = limit;
-			
-			executor.submit(() -> {
-				System.out.println("Getting data for page: " + page);
-				
-				// Queries swell for the accounts from the page <i>.
-				ApiDataObject query = connection.get("/accounts?limit=" + page_limit + "&page=" + page);
-				
-				// Grabs the data array from the query.
-				JSONArray fetched_data = (JSONArray) ((ApiDataObject) query.get("$data")).get("results");
-
-				// Loops through the data array and adds the accounts to the fetched_data array.
-				for (int ii = 0; ii < fetched_data.size(); ii++) {
-					data.add(JsonDataParser.createApiDataObject((JSONObject) fetched_data.get(ii)));
-				}
-				
-				latch.countDown();
-
-			});
-									
-		}
-		
-		latch.await();
-
-		System.out.println("Captured Data size: " + data.size());
-
-		// Returns the data array.
-		return data;
-
+	    // Returns the finished compiled list of accounts.
+	    return data;
 	}
 	
 	
-	public ApiDataObject generatePasswordToken(String email) throws NoSuchAlgorithmException {
+	/**
+	 * Generates a password token for a customer.
+	 * @param email - The identifying email of the customer account.
+	 * @return {@linkplain ApiDataObject}
+	 */
+	public ApiDataObject generatePasswordToken(String email) {
 
 		ApiDataObject body = new ApiDataObject();
-
-		String token = CryptUtil.generateToken();
-
-		ApiDataObject response = new ApiDataObject();
-
-		if (token != null) {
-			body.put("password_token", token);
-			ApiDataObject verify_account = connection.get("/accounts/" + email);
-			System.out.println(verify_account.toString());
-			if (verify_account.get("success") != null) {
-				return verify_account;
-			}
-
-			ApiDataObject result = connection.put("/accounts/" + email, body);
-
-			if (result.get("id") != null) {
-				System.out.println(result.toString());
-				response.put("password_token", token);
+		try {
+			
+			// Generates a secure token approximately 16 characters long using Sha256.
+			String token = CryptUtil.generateToken();
+	
+			ApiDataObject response = new ApiDataObject();
+	
+			if (token != null) {
+				
+				// Adds the password token to the request body for swell.
+				body.put("password_token", token);
+				
+				// Verifies the account exists.
+				ApiDataObject verify_account = getAccount(email);
+				
+				System.out.println(verify_account.toString());
+				
+				// If the account doesn't exist, return failed response. 
+				// If we don't do this step, the following method will go ahead and create an account for the email and set a token.
+				if (verify_account.get("$data") == null) {
+					return response.put("success", false).put("message", "Account does not exist.");
+					
+				} else {
+	
+					// Attempts to update the account with the password token. 
+					ApiDataObject result = connection.put("/accounts/" + email, body);
+		
+					if (result.get("$data") != null) {
+						System.out.println(result.toString());
+						response.put("password_token", token);
+					} else {
+						response.put("success", false);
+						response.put("message", "Unauthorized to generate token.");
+					}
+				}
+	
 			} else {
+	
 				response.put("success", false);
-				response.put("message", "Unauthorized to generate token.");
+				response.put("message", "Failed to generate token.");
+	
 			}
-
-		} else {
-
-			response.put("success", false);
-			response.put("message", "Failed to generate token.");
-
+	
+			return response;
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
-
-		return response;
+		
+		return new ApiDataObject().put("success", false).put("message", "Failed to generate password token, algorithm exception.");
 
 	}
 
